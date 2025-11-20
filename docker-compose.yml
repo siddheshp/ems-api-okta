@@ -25,7 +25,7 @@ services:
     build: 
       context: .
       dockerfile: Dockerfile
-    container_name: ems-api
+    container_name: ems-backend
     ports:
       - "3000:3000"
     environment:

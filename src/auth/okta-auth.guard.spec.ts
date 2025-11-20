@@ -2,6 +2,18 @@ import { ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { OktaAuthGuard } from './okta-auth.guard';
 
+jest.mock("@okta/jwt-verifier", () => {
+    return jest.fn().mockImplementation(() => ({
+        verifyAccessToken: jest.fn().mockResolvedValue({
+            claims: {
+                sub: "1234567890",
+                email: "john.doe@example.com",
+                groups: ["group1", "group2"],
+            },
+        }),
+    }));
+});
+
 describe('OktaAuthGuard', () => {
   let guard: OktaAuthGuard;
   let mockConfigService: jest.Mocked<ConfigService>;
