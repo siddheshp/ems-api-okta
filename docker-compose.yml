@@ -1,0 +1,57 @@
+version: '3.8'
+services:
+  # Oracle Database
+  oracledb:
+    image: container-registry.oracle.com/database/express:21.3.0-xe
+    container_name: ems-oracledb
+    ports:
+      - "1521:1521"
+      - "5500:5500"
+    environment:
+      - ORACLE_PWD=OraclePassword123
+    volumes:
+      - oracle-data:/opt/oracle/oradata
+      - ./oracle-init:/opt/oracle/scripts/startup
+    healthcheck:
+      test: ["CMD", "sqlplus", "-L", "sys/OraclePassword123@//localhost:1521/XE as sysdba", "@/dev/null"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+    networks:
+      - ems-network
+
+  # NestJS API
+  api:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    container_name: ems-api
+    ports:
+      - "3000:3000"
+    environment:
+      # Okta Configuration
+      - OKTA_ISSUER=${OKTA_ISSUER}
+      - OKTA_CLIENT_ID=${OKTA_CLIENT_ID}
+      - OKTA_AUDIENCE=${OKTA_AUDIENCE}
+      # Oracle Database Configuration
+      - DB_TYPE=oracle
+      - DB_HOST=oracledb
+      - DB_PORT=1521
+      - DB_USERNAME=training
+      - DB_PASSWORD=training123
+      - DB_SERVICE_NAME=XEPDB1
+      - DB_SYNCHRONIZE=true
+    depends_on:
+      oracledb:
+        condition: service_healthy
+    networks:
+      - ems-network
+    restart: unless-stopped
+
+volumes:
+  oracle-data:
+    driver: local
+
+networks:
+  ems-network:
+    driver: bridge
