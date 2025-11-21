@@ -9,11 +9,15 @@ pipeline {
   stages {
     stage('Ensure Podman Machine') {
       steps {
-        bat 'echo Checking Podman machine...'
+        bat 'echo Checking Podman Machine connection…'
+        // list machine & connections
         bat 'podman machine list'
-        bat 'podman machine set --rootful=true'
-        bat 'podman machine start'
         bat 'podman system connection ls'
+        // set the correct connection
+        bat 'podman system connection default podman-machine1'
+        // optionally set rootful if needed
+        // bat 'podman machine set podman-machine1 --rootful=true'
+        // show info
         bat 'podman info'
       }
     }
