@@ -16,7 +16,7 @@ pipeline {
         bat 'podman machine list'
         bat 'podman system connection ls'
         // set the correct connection
-        bat 'podman system connection default podman-machine1'
+        // bat 'podman system connection default podman-machine1'
         // optionally set rootful if needed
         // bat 'podman machine set podman-machine1 --rootful=true'
         // show info
