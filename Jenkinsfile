@@ -2,15 +2,18 @@ pipeline {
   agent any
   environment {
     // Set environment variables - UPDATE with your Docker Hub username
-    DOCKER_HUB_USERNAME = "siddheshp"
+    DOCKER_HUB_USERNAME = 'siddheshp'
     IMAGE_NAME = "${DOCKER_HUB_USERNAME}/test-ems-api"
     IMAGE_TAG  = "${env.BUILD_NUMBER}"
   }
   stages {
-    stage('Debug Versions') {
+    stage('Ensure Podman Machine') {
       steps {
-        bat 'echo Podman version:'
-        bat 'podman --version'
+        bat 'echo Checking Podman machine...'
+        bat 'podman machine list'
+        bat 'podman machine set --rootful=true'
+        bat 'podman machine start'
+        bat 'podman system connection ls'
         bat 'podman info'
       }
     }
@@ -23,7 +26,7 @@ pipeline {
       steps {
         // assume Node.js is installed on agent
         bat 'npm install'
-        // bat 'npm test'
+      // bat 'npm test'
       }
     }
     stage('Build API Image') {
@@ -38,7 +41,7 @@ pipeline {
       steps {
         script {
           withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
-            bat "podman login -u %DOCKER_USERNAME% -p %DOCKER_PASSWORD% docker.io"
+            bat 'podman login -u %DOCKER_USERNAME% -p %DOCKER_PASSWORD% docker.io'
             bat "podman push ${IMAGE_NAME}:${IMAGE_TAG}"
             bat "podman push ${IMAGE_NAME}:latest"
           }
