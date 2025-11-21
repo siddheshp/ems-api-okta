@@ -7,6 +7,13 @@ pipeline {
     IMAGE_TAG  = "${env.BUILD_NUMBER}"
   }
   stages {
+    stage('Debug Versions') {
+      steps {
+        bat 'echo Podman version:'
+        bat 'podman --version'
+        bat 'podman info'
+      }
+    }
     stage('Checkout') {
       steps {
         git url: 'https://github.com/siddheshp/ems-api-okta.git', branch: 'main'
