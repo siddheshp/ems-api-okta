@@ -10,6 +10,8 @@ pipeline {
     stage('Ensure Podman Machine') {
       steps {
         bat 'echo Checking Podman Machine connection…'
+        bat 'echo Jenkins build running as user: %USERNAME%'
+        bat 'whoami'
         // list machine & connections
         bat 'podman machine list'
         bat 'podman system connection ls'
