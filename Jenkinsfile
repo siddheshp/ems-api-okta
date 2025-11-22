@@ -3,7 +3,7 @@ pipeline {
   environment {
     // Set environment variables - UPDATE with your AWS details
     AWS_REGION = 'us-east-1'  // Change to your AWS region
-    AWS_ACCOUNT_ID = 'YOUR_AWS_ACCOUNT_ID'  // Change to your AWS account ID
+    AWS_ACCOUNT_ID = '797721580785'  // Change to your AWS account ID
     ECR_REPOSITORY = 'test-ems-api'  // Change to your ECR repository name
     IMAGE_TAG = "${env.BUILD_NUMBER}"
     ECR_REGISTRY = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
