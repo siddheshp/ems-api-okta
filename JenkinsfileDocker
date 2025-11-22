@@ -1,13 +1,10 @@
 pipeline {
   agent any
   environment {
-    // Set environment variables - UPDATE with your AWS details
-    AWS_REGION = 'us-east-1'  // Change to your AWS region
-    AWS_ACCOUNT_ID = 'YOUR_AWS_ACCOUNT_ID'  // Change to your AWS account ID
-    ECR_REPOSITORY = 'test-ems-api'  // Change to your ECR repository name
-    IMAGE_TAG = "${env.BUILD_NUMBER}"
-    ECR_REGISTRY = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com"
-    IMAGE_NAME = "${ECR_REGISTRY}/${ECR_REPOSITORY}"
+    // Set environment variables - UPDATE with your Docker Hub username
+    DOCKER_HUB_USERNAME = 'siddheshp'
+    IMAGE_NAME = "${DOCKER_HUB_USERNAME}/test-ems-api"
+    IMAGE_TAG  = "${env.BUILD_NUMBER}"
   }
   stages {
     stage('Ensure Podman Machine') {
@@ -37,16 +34,11 @@ pipeline {
         }
       }
     }
-    stage('Push to AWS ECR') {
+    stage('Push to Docker Hub') {
       steps {
         script {
-          withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
-            // Login to ECR
-            bat """
-              FOR /F "tokens=*" %%i IN ('aws ecr get-login-password --region %AWS_REGION%') DO SET ECR_PASSWORD=%%i
-              echo %ECR_PASSWORD% | podman login --username AWS --password-stdin %ECR_REGISTRY%
-            """
-            // Push images
+          withCredentials([usernamePassword(credentialsId: 'dockerhub-credentials', passwordVariable: 'DOCKER_PASSWORD', usernameVariable: 'DOCKER_USERNAME')]) {
+            bat 'podman login -u %DOCKER_USERNAME% -p %DOCKER_PASSWORD% docker.io'
             bat "podman push ${IMAGE_NAME}:${IMAGE_TAG}"
             bat "podman push ${IMAGE_NAME}:latest"
           }
