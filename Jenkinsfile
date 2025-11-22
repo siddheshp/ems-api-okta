@@ -41,18 +41,38 @@ pipeline {
       steps {
         script {
           withCredentials([[$class: 'AmazonWebServicesCredentialsBinding', credentialsId: 'aws-credentials']]) {
-            // Login to ECR
-            bat """
-              FOR /F "tokens=*" %%i IN ('aws ecr get-login-password --region %AWS_REGION%') DO SET ECR_PASSWORD=%%i
-              echo %ECR_PASSWORD% | podman login --username AWS --password-stdin %ECR_REGISTRY%
-            """
-            // Push images
-            bat "podman push ${IMAGE_NAME}:${IMAGE_TAG}"
-            bat "podman push ${IMAGE_NAME}:latest"
-          }
-        }
-      }
-    }
+            // debug: show which AWS identity and whoami (will help root-cause)
+            bat '''
+            echo ===== whoami =====
+            whoami
+            echo ===== AWS identity =====
+            aws sts get-caller-identity --region %AWS_REGION%
+          '''
+
+              // backup existing docker/podman config (so stale auth won't be used)
+              bat '''
+            if exist "%USERPROFILE%\\.docker\\config.json" (
+              echo Backing up existing docker config
+              move "%USERPROFILE%\\.docker\\config.json" "%USERPROFILE%\\.docker\\config.json.jenkinsbak" || echo backup failed
+            )
+          '''
+
+              // login to ECR (single-line pipeline); this should return "Login Succeeded"
+              bat '''
+            echo Logging into ECR...
+            aws ecr get-login-password --region %AWS_REGION% | podman login --username AWS --password-stdin %ECR_REGISTRY%
+          '''
+
+              // push images
+              bat """
+            echo Pushing image: ${IMAGE_NAME}:${IMAGE_TAG}
+            podman push ${IMAGE_NAME}:${IMAGE_TAG}
+            podman push ${IMAGE_NAME}:latest
+          """
+        } // withCredentials
+      } // script
+    } // steps
+  } // stage
   }
   post {
     always {
